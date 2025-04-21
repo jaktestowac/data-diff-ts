@@ -8,6 +8,11 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaktestowac/data-diff-ts.git"
+  },
+  "homepage": "https://github.com/jaktestowac/data-diff-ts",
   "scripts": {
     "build": "tsup",
     "prepare": "tsup",
