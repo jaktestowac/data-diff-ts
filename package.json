@@ -1,0 +1,37 @@
+{
+  "name": "data-diff-ts",
+  "version": "1.0.0",
+  "description": "Lightweight TypeScript utility for comparing objects, arrays, and nested data structures.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "prepare": "tsup",
+    "test": "vitest run",
+    "npm:patch": "npm version patch",
+    "npm:publish": "npm publish --access public"
+  },
+  "keywords": [
+    "diff",
+    "compare",
+    "typescript",
+    "object-diff",
+    "array-diff",
+    "deep-diff",
+    "data",
+    "testing",
+    "automation"
+  ],
+  "author": "jaktestowac.pl",
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^7.2.0",
+    "typescript": "^5.3.3",
+    "prettier": "3.5.3",
+    "vitest": "^3.1.2"
+  }
+}
