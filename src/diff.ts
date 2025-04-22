@@ -1,8 +1,8 @@
-import { DiffResult } from './types';
-import { diffArrays } from './diffArrays';
+import { DiffResult } from "./types";
+import { diffArrays } from "./diffArrays";
 
 function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function isArray(value: unknown): value is Array<unknown> {
@@ -14,7 +14,7 @@ export function diff(objA: Record<string, any>, objB: Record<string, any>): Diff
     added: {},
     removed: {},
     changed: {},
-    unchanged: {}
+    unchanged: {},
   };
 
   const allKeys = new Set([...Object.keys(objA), ...Object.keys(objB)]);
@@ -28,23 +28,33 @@ export function diff(objA: Record<string, any>, objB: Record<string, any>): Diff
     } else if (!(key in objB)) {
       result.removed[key] = valA;
     } else if (isObject(valA) && isObject(valB)) {
-      const nested = diff(valA, valB);
-      const hasChanges =
-        Object.keys(nested.added).length > 0 ||
-        Object.keys(nested.removed).length > 0 ||
-        Object.keys(nested.changed).length > 0;
-
-      if (hasChanges) {
+      // When comparing objects, we need to handle empty objects specially
+      if (Object.keys(valA).length === 0 && Object.keys(valB).length > 0) {
+        // Empty object to object with keys
+        const nested: DiffResult = {
+          added: { ...valB },
+          removed: {},
+          changed: {},
+          unchanged: {},
+        };
         result.changed[key] = nested;
       } else {
-        result.unchanged[key] = valA;
+        const nested = diff(valA, valB);
+        const hasChanges =
+          Object.keys(nested.added).length > 0 ||
+          Object.keys(nested.removed).length > 0 ||
+          Object.keys(nested.changed).length > 0;
+
+        if (hasChanges) {
+          result.changed[key] = nested;
+        } else {
+          result.unchanged[key] = valA;
+        }
       }
     } else if (isArray(valA) && isArray(valB)) {
       const arrayResult = diffArrays(valA, valB);
       const hasChanges =
-        arrayResult.added.length > 0 ||
-        arrayResult.removed.length > 0 ||
-        arrayResult.changed.length > 0;
+        arrayResult.added.length > 0 || arrayResult.removed.length > 0 || arrayResult.changed.length > 0;
 
       if (hasChanges) {
         result.changed[key] = arrayResult;
