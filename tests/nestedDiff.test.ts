@@ -48,7 +48,7 @@ describe("diff() and smartDiff() with nested objects and arrays", () => {
     expect(addressDiff.changed["zip"]).toEqual({ from: "12345", to: "54321" });
 
     const rolesDiff = userDiff.changed["roles"] as any;
-    expect(rolesDiff.changed[1]).toEqual({
+    expect(rolesDiff.changed[0]).toEqual({
       index: 1,
       from: { name: "editor", active: false },
       to: { name: "editor", active: true },

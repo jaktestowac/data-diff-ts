@@ -62,6 +62,33 @@ console.log(flat);
   "user.name": { from: "Alice", to: "Alicia" }
 }
 */
+
+// Without flattening
+const nested = smartDiff(a, b);
+
+console.log(nested);
+/*
+{
+  added: {},
+  changed: {
+    user: {
+      added: {},
+      changed: {
+        name: {
+          from: "Alice",
+          to: "Alicia",
+        },
+      },
+      removed: {},
+      unchanged: {
+        email: "alice@example.com",
+      },
+    },
+  },
+  removed: {},
+  unchanged: {},
+}
+*/
 ```
 
 ### Compare Arrays

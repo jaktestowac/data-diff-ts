@@ -9,7 +9,7 @@ function isArray(value: unknown): value is Array<unknown> {
   return Array.isArray(value);
 }
 
-export function diff(objA: Record<string, any>, objB: Record<string, any>): DiffResult {
+export function diff(objA: Record<string, any>, objB: Record<string, any>): DiffResult | {} {
   const result: DiffResult = {
     added: {},
     removed: {},
@@ -39,23 +39,26 @@ export function diff(objA: Record<string, any>, objB: Record<string, any>): Diff
         };
         result.changed[key] = nested;
       } else {
-        const nested = diff(valA, valB);
+        const nested = diff(valA, valB) as DiffResult;
+
         const hasChanges =
           Object.keys(nested.added).length > 0 ||
           Object.keys(nested.removed).length > 0 ||
           Object.keys(nested.changed).length > 0;
-
         if (hasChanges) {
           result.changed[key] = nested;
-        } else {
+        }
+
+        if (Object.keys(nested).length === 0) {
           result.unchanged[key] = valA;
+        } else {
+          result.changed[key] = nested;
         }
       }
     } else if (isArray(valA) && isArray(valB)) {
-      const arrayResult = diffArrays(valA, valB);
+      const arrayResult = diffArrays(valA, valB, { deep: true });
       const hasChanges =
         arrayResult.added.length > 0 || arrayResult.removed.length > 0 || arrayResult.changed.length > 0;
-
       if (hasChanges) {
         result.changed[key] = arrayResult;
       } else {
@@ -66,6 +69,20 @@ export function diff(objA: Record<string, any>, objB: Record<string, any>): Diff
     } else {
       result.unchanged[key] = valA;
     }
+  }
+
+  // If there are no changes, additions, or removals, return empty object
+  if (
+    Object.keys(result.added).length === 0 &&
+    Object.keys(result.removed).length === 0 &&
+    Object.keys(result.changed).length === 0
+  ) {
+    return {
+      added: {},
+      removed: {},
+      changed: {},
+      unchanged: {},
+    };
   }
 
   return result;

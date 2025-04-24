@@ -27,6 +27,16 @@ export function diffFlattened(a: Record<string, any>, b: Record<string, any>, pr
     }
   }
 
+  // Handle removed properties for empty objects (fix for nested removal)
+  for (const [key, val] of Object.entries(nested.removed)) {
+    const path = buildPath(prefix, key);
+    if (typeof val === "object" && val !== null) {
+      flattenRemovedObject(val, undefined, path, flat);
+    } else {
+      flat[path] = { from: val, to: undefined };
+    }
+  }
+
   for (const [key, val] of Object.entries(nested.changed)) {
     const path = buildPath(prefix, key);
 
@@ -36,6 +46,13 @@ export function diffFlattened(a: Record<string, any>, b: Record<string, any>, pr
         for (const [addedKey, addedVal] of Object.entries(val.added)) {
           const addedPath = buildPath(path, addedKey);
           flat[addedPath] = { from: undefined, to: addedVal };
+        }
+      }
+      // Handle removed properties for plain objects, not arrays
+      if (!Array.isArray(a[key])) {
+        for (const [removedKey, removedVal] of Object.entries(val.removed)) {
+          const removedPath = buildPath(path, removedKey);
+          flat[removedPath] = { from: removedVal, to: undefined };
         }
       }
       Object.assign(flat, diffFlattened(a[key] || {}, b[key] || {}, path));
@@ -64,6 +81,16 @@ export function diffFlattened(a: Record<string, any>, b: Record<string, any>, pr
             flattenAddedObject(aArray[i], addedItem, addedPath, flat);
           } else {
             flat[addedPath] = { from: undefined, to: addedItem };
+          }
+        }
+        // Only remove elements at indices beyond the new array length
+        for (let i = bArray.length; i < aArray.length; i++) {
+          const removedItem = aArray[i];
+          const removedPath = `${path}[${i}]`;
+          if (typeof removedItem === "object" && removedItem !== null) {
+            flattenRemovedObject(removedItem, bArray[i], removedPath, flat);
+          } else {
+            flat[removedPath] = { from: removedItem, to: undefined };
           }
         }
       } else {
@@ -135,5 +162,31 @@ function flattenAddedObject(fromValue: any, toValue: any, path: string, result: 
       nextFromValue = fromValue[key];
     }
     flattenAddedObject(nextFromValue, val, newPath, result);
+  }
+}
+
+// Helper function to flatten removed objects recursively
+function flattenRemovedObject(fromValue: any, toValue: any, path: string, result: FlatDiff): void {
+  if (typeof fromValue !== "object" || fromValue === null) {
+    result[path] = { from: fromValue, to: toValue };
+    return;
+  }
+
+  if (Array.isArray(fromValue)) {
+    // Only remove elements for indices that don't exist in the new array
+    const newLength = Array.isArray(toValue) ? toValue.length : 0;
+    for (let i = newLength; i < fromValue.length; i++) {
+      result[`${path}[${i}]`] = { from: fromValue[i], to: undefined };
+    }
+    return;
+  }
+
+  for (const [key, val] of Object.entries(fromValue)) {
+    const newPath = buildPath(path, key);
+    let nextToValue = undefined;
+    if (toValue && typeof toValue === "object" && !Array.isArray(toValue)) {
+      nextToValue = toValue[key];
+    }
+    flattenRemovedObject(val, nextToValue, newPath, result);
   }
 }

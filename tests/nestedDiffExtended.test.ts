@@ -70,7 +70,7 @@ describe("diff() and smartDiff() with deeply nested objects and arrays", () => {
     expect(coordinatesDiff.changed["lon"]).toEqual({ from: -0.1278, to: 2.3522 });
 
     const rolesDiff = userDiff.changed["roles"] as any;
-    expect(rolesDiff.changed[1]).toEqual({
+    expect(rolesDiff.changed[0]).toEqual({
       index: 1,
       from: { name: "editor", active: false },
       to: { name: "editor", active: true },

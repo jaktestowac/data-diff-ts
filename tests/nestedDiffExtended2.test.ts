@@ -1,7 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { diff } from "../src/diff";
 import { smartDiff } from "../src/smartDiff";
-import type { DiffResult } from "../src/types";
 import type { FlatDiff } from "../src/flattenedDiff";
 
 describe("Nested Structure Tests", () => {
