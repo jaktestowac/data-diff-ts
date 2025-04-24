@@ -1,6 +1,6 @@
 {
   "name": "data-diff-ts",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lightweight TypeScript utility for comparing objects, arrays, and nested data structures.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
