@@ -50,6 +50,21 @@ describe("Advanced Data Structures Tests", () => {
     });
   });
 
+  test("diffing objects with non-string keys 3", () => {
+    const numKey1 = "123";
+    const numKey2 = "456";
+    const numKey3 = "789";
+
+    const a = { [numKey1]: "value1", [numKey2]: { [numKey3]: "value2" } };
+    const b = { [numKey1]: "value12", [numKey2]: { [numKey3]: "value22" } };
+
+    const result = smartDiff(a, b, { flatten: true }) as FlatDiff;
+    expect(result).toEqual({
+      "[123]": { from: "value1", to: "value12" },
+      "[456][789]": { from: "value2", to: "value22" },
+    });
+  });
+
   test("diffing objects with different value types at the same path", () => {
     const a = {
       settings: {
