@@ -18,90 +18,95 @@ export function diffFlattened(a: Record<string, any>, b: Record<string, any>, pr
   const nested = diff(a, b);
 
   // Handle added properties for empty objects
-  for (const [key, val] of Object.entries(nested.added)) {
-    const path = buildPath(prefix, key);
-    if (typeof val === "object" && val !== null) {
-      flattenAddedObject(undefined, val, path, flat);
-    } else {
-      flat[path] = { from: undefined, to: val };
+  if ("added" in nested) {
+    for (const [key, val] of Object.entries(nested.added)) {
+      const path = buildPath(prefix, key);
+      if (typeof val === "object" && val !== null) {
+        flattenAddedObject(undefined, val, path, flat);
+      } else {
+        flat[path] = { from: undefined, to: val };
+      }
     }
   }
-
   // Handle removed properties for empty objects (fix for nested removal)
-  for (const [key, val] of Object.entries(nested.removed)) {
-    const path = buildPath(prefix, key);
-    if (typeof val === "object" && val !== null) {
-      flattenRemovedObject(val, undefined, path, flat);
-    } else {
-      flat[path] = { from: val, to: undefined };
+  if ("removed" in nested) {
+    for (const [key, val] of Object.entries(nested.removed)) {
+      const path = buildPath(prefix, key);
+      if (typeof val === "object" && val !== null) {
+        flattenRemovedObject(val, undefined, path, flat);
+      } else {
+        flat[path] = { from: val, to: undefined };
+      }
     }
   }
 
-  for (const [key, val] of Object.entries(nested.changed)) {
-    const path = buildPath(prefix, key);
+  if ("changed" in nested) {
+    for (const [key, val] of Object.entries(nested.changed)) {
+      const path = buildPath(prefix, key);
 
-    if (isDiffResult(val)) {
-      // Only handle added properties for plain objects, not arrays
-      if (!Array.isArray(b[key])) {
-        for (const [addedKey, addedVal] of Object.entries(val.added)) {
-          const addedPath = buildPath(path, addedKey);
-          flat[addedPath] = { from: undefined, to: addedVal };
-        }
-      }
-      // Handle removed properties for plain objects, not arrays
-      if (!Array.isArray(a[key])) {
-        for (const [removedKey, removedVal] of Object.entries(val.removed)) {
-          const removedPath = buildPath(path, removedKey);
-          flat[removedPath] = { from: removedVal, to: undefined };
-        }
-      }
-      Object.assign(flat, diffFlattened(a[key] || {}, b[key] || {}, path));
-    } else if (isArrayDiffResult(val)) {
-      if (Array.isArray(a[key]) && Array.isArray(b[key])) {
-        const aArray = a[key];
-        const bArray = b[key];
-
-        // Handle direct array value changes
-        val.changed.forEach((change) => {
-          const aValue = aArray[change.index];
-          const bValue = bArray[change.index];
-          const arrPath = `${path}[${change.index}]`;
-          if (typeof aValue === "object" && aValue !== null && typeof bValue === "object" && bValue !== null) {
-            Object.assign(flat, diffFlattened(aValue, bValue, arrPath));
-          } else {
-            flat[arrPath] = { from: aValue, to: bValue };
-          }
-        });
-
-        // Only add new elements at indices beyond the original array length
-        for (let i = aArray.length; i < bArray.length; i++) {
-          const addedItem = bArray[i];
-          const addedPath = `${path}[${i}]`;
-          if (typeof addedItem === "object" && addedItem !== null) {
-            flattenAddedObject(aArray[i], addedItem, addedPath, flat);
-          } else {
-            flat[addedPath] = { from: undefined, to: addedItem };
+      if (isDiffResult(val)) {
+        // Only handle added properties for plain objects, not arrays
+        if (!Array.isArray(b[key])) {
+          for (const [addedKey, addedVal] of Object.entries(val.added)) {
+            const addedPath = buildPath(path, addedKey);
+            flat[addedPath] = { from: undefined, to: addedVal };
           }
         }
-        // Only remove elements at indices beyond the new array length
-        for (let i = bArray.length; i < aArray.length; i++) {
-          const removedItem = aArray[i];
-          const removedPath = `${path}[${i}]`;
-          if (typeof removedItem === "object" && removedItem !== null) {
-            flattenRemovedObject(removedItem, bArray[i], removedPath, flat);
-          } else {
-            flat[removedPath] = { from: removedItem, to: undefined };
+        // Handle removed properties for plain objects, not arrays
+        if (!Array.isArray(a[key])) {
+          for (const [removedKey, removedVal] of Object.entries(val.removed)) {
+            const removedPath = buildPath(path, removedKey);
+            flat[removedPath] = { from: removedVal, to: undefined };
           }
+        }
+        Object.assign(flat, diffFlattened(a[key] || {}, b[key] || {}, path));
+      } else if (isArrayDiffResult(val)) {
+        if (Array.isArray(a[key]) && Array.isArray(b[key])) {
+          const aArray = a[key];
+          const bArray = b[key];
+
+          // Handle direct array value changes
+          val.changed.forEach((change) => {
+            const aValue = aArray[change.index];
+            const bValue = bArray[change.index];
+            const arrPath = `${path}[${change.index}]`;
+            if (typeof aValue === "object" && aValue !== null && typeof bValue === "object" && bValue !== null) {
+              Object.assign(flat, diffFlattened(aValue, bValue, arrPath));
+            } else {
+              flat[arrPath] = { from: aValue, to: bValue };
+            }
+          });
+
+          // Only add new elements at indices beyond the original array length
+          for (let i = aArray.length; i < bArray.length; i++) {
+            const addedItem = bArray[i];
+            const addedPath = `${path}[${i}]`;
+            if (typeof addedItem === "object" && addedItem !== null) {
+              flattenAddedObject(aArray[i], addedItem, addedPath, flat);
+            } else {
+              flat[addedPath] = { from: undefined, to: addedItem };
+            }
+          }
+          // Only remove elements at indices beyond the new array length
+          for (let i = bArray.length; i < aArray.length; i++) {
+            const removedItem = aArray[i];
+            const removedPath = `${path}[${i}]`;
+            if (typeof removedItem === "object" && removedItem !== null) {
+              flattenRemovedObject(removedItem, bArray[i], removedPath, flat);
+            } else {
+              flat[removedPath] = { from: removedItem, to: undefined };
+            }
+          }
+        } else {
+          // Fallback for other array diffs
+          val.changed.forEach((entry) => {
+            const subKey = `${path}[${entry.index}]`;
+            flat[subKey] = { from: entry.from, to: entry.to };
+          });
         }
       } else {
-        // Fallback for other array diffs
-        val.changed.forEach((entry) => {
-          const subKey = `${path}[${entry.index}]`;
-          flat[subKey] = { from: entry.from, to: entry.to };
-        });
+        flat[path] = val as { from: unknown; to: unknown };
       }
-    } else {
-      flat[path] = val as { from: unknown; to: unknown };
     }
   }
 
