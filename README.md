@@ -183,3 +183,5 @@ console.log(result);
 MIT © jaktestowac.pl
 
 Powered by [jaktestowac.pl](https://www.jaktestowac.pl/) team!
+
+🌐 Check out **[GitHub](https://github.com/jaktestowac) profile** for more open-source projects and resources.
